@@ -104,8 +104,8 @@ http.start do |http|
   end
 
   if host_problems_flag || service_problems_flag
-    smtp = Net::SMTP.start('mail.mkhoj.com', 25)
-    smtp.send_message msg, "nagios@#{monserver}", 'adserve-ops@inmobi.com'
+    smtp = Net::SMTP.start('mail.boo.com', 25)
+    smtp.send_message msg, "nagios@#{monserver}", 'foo@boo.com'
     smtp.finish
   end
 
