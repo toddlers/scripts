@@ -1,0 +1,35 @@
+#!/bin/sh
+
+TOPDIR=/opt/apt/inmobi
+INCOMING=$TOPDIR/incoming
+TODEL=$TOPDIR/todel
+
+cd $TOPDIR
+
+found=0
+for i in $INCOMING/*.deb; do
+if [ -e $i ]; then
+found=`expr $found + 1`
+fi
+done
+
+if [ "$found" -lt 1 ]; then
+echo "$INCOMING is empty..."
+exit
+fi
+
+for aa in ${INCOMING}/*.deb; do
+echo "Processing ${aa}..."
+NAME=`dpkg -I $aa |  grep Package: |grep -v Description:|grep -v Maintainer:| awk '{print $2}'`
+VER=`dpkg -I $aa |  grep Version: | grep -v Description:|grep -v Maintainer: | awk '{print $2}'`
+ARCH=`dpkg -I $aa |  grep Architecture: |grep -v Description:|grep -v Maintainer:| awk '{print $2}'`
+bb="${NAME}-${VER}_${ARCH}.deb"
+mv $aa $bb
+cp $bb /var/drepo/inmobi/dists/prod/main/binary-amd64
+echo "Moving ${bb} to ${TODEL}..."
+mv -vf ${bb} ${TODEL}/
+done
+/etc/apt/update-archive.sh
+KEEP=2
+echo "Removing stale debs older than ${KEEP} days from ${TODEL} (if any)..."
+find ${TODEL} -type f -mtime +${KEEP} -exec rm -v '{}' \;
