@@ -1,6 +1,6 @@
 #!/bin/sh
 
-TOPDIR=/opt/apt/inmobi
+TOPDIR=/opt/apt/foo
 INCOMING=$TOPDIR/incoming
 TODEL=$TOPDIR/todel
 
@@ -25,7 +25,7 @@ VER=`dpkg -I $aa |  grep Version: | grep -v Description:|grep -v Maintainer: | a
 ARCH=`dpkg -I $aa |  grep Architecture: |grep -v Description:|grep -v Maintainer:| awk '{print $2}'`
 bb="${NAME}-${VER}_${ARCH}.deb"
 mv $aa $bb
-cp $bb /var/drepo/inmobi/dists/prod/main/binary-amd64
+cp $bb /var/drepo/foo/dists/prod/main/binary-amd64
 echo "Moving ${bb} to ${TODEL}..."
 mv -vf ${bb} ${TODEL}/
 done

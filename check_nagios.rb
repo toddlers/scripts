@@ -24,7 +24,7 @@ optparse.parse!
 
  def colo(h)
   c = nil
-   if h =~ /\.([[:alnum:]]+)\.inmobi\.com$/
+   if h =~ /\.([[:alnum:]]+)\.foo\.com$/
     c=$1
    end
    c
@@ -65,7 +65,7 @@ http.start do |http|
 
   msg = ""
   msg << "From: Nagios <nagios@#{monserver}>\n"
-  msg << "To: Adserve Ops  <adserve-ops@inmobi.com>\n"
+  msg << "To: Adserve Ops  <adserve-ops@foo.com>\n"
 
   status = resp.scan(/Notifications are disabled/)
   if status.size > 0
