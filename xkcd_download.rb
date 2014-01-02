@@ -10,7 +10,7 @@ require 'fileutils'
 
 
 class XkcdDownload
-    
+
     def self.parse(args)
         options = {}
         opts = OptionParser.new do |opts|
