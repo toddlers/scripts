@@ -1,12 +1,6 @@
 #!/bin/sh
-############################################################################
-# Script: cmd.sh
-# Description:
-#       This script is used to run Nagios commands on the command-line. It passes
-#       commands to the Nagios command file by printing the command string and
-#       directing it to the command file.
-# Author: Hazem Mahmoud
-# Create Date: 20130521
+
+##########################################################################
 # Usage:
 #       ./nagioscmd.sh -h host -s service -c nagios_cmd
 #       ./nagioscmd.sh -h sccproddb1.scc1.rnmd.net -s DB-SYNCER -c ENABLE_SVC_CHECK
