@@ -15,7 +15,7 @@ cflag=0
 usage(){
 echo “Usage: ./nagioscmd.sh -h <host> -s <service> -c <nagios_cmd>”
 echo “   -h: FQDN of the host you are running command against”
-echo “   -s: Service you are checking (ie: DB-SYNCER)”
+echo "   -s: Service you are checking (ie: DB-SYNCER)"
 echo “   -c: Nagios command options: http://old.nagios.org/developerinfo/externalcommands/commandlist.php&#8221;
 echo “”
 echo “   Example: ./nagioscmd.sh -h sccproddb1.scc1.rnmd.net -s DB-SYNCER -c ENABLE_SVC_CHECK”
