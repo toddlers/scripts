@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
+#
 require 'optparse'
 require 'right_api_client'
-require 'pp'
 
 class Deploy
   
@@ -49,15 +49,11 @@ class Deploy
 
   def self.run(args)
     opts = parse(args)
-    pp opts
     server_array = opts[:sarray]
     account_id = opts[:account_id]
     script = "right_script_href=/api/right_scripts/" + opts[:script]
-    pp script
     username = opts[:user]
     password = opts[:passwd]
-    pp username
-    pp password
     begin
       @client = RightApi::Client.new(:email => username , :password => password, :account_id => account_id)
       task = @client.server_arrays.index(:filter => ["name==#{server_array}"])[0].multi_run_executable(script)
