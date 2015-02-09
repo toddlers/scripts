@@ -1,0 +1,65 @@
+#!/bin/bash
+set -a
+
+PORT=6380
+IP_ADDRESS=$(/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')
+
+OPTIONS+="-h $IP_ADDRESS -p $PORT"
+
+
+offset_warning=${1:-150}
+offset_critical=${2:-200}
+
+redis_info=$(redis-cli  $OPTIONS info | sed 's/\x0D//g')
+
+values="used_memory|role"
+
+info=$(redis-cli $OPTIONS info 2>/dev/null| sed 's/\x0D//g')
+
+if [[ -z $info ]];then
+    echo "CRITICAL: Redis connection failed"
+    exit 2
+fi
+
+results=$(grep -wE "$values" <<<"$info" | tr '\n' ',')
+
+redis_role=$(grep role <<< "$redis_info" | cut -d : -f2)
+
+if [[ -z $results ]];then
+    echo "WARNING: Unable to fetch stats from redis"
+    exit 1
+fi
+
+if [[ $redis_role == "slave" ]]
+then
+        slave_db0=$(grep db0 <<< "$redis_info"| cut -d = -f2 | cut -d , -f1)
+        master_ip=$(grep master_host <<< "$redis_info" | cut -d : -f2 | cut -d , -f1)
+	master_db0=$(redis-cli -h $master_ip info | grep db0 | cut -d = -f2 | cut -d , -f1| sed 's/\x0D//g')
+	if [[ -z $master_db0 ]]
+        then
+                echo "Master($master_ip) Down.$results"
+		exit 1	
+        fi
+        offset=$(( $master_db0 - $slave_db0 ))
+fi
+
+if [[ $redis_role == "master" ]]
+then 
+        echo "Redis OK, $results"
+	exit 0
+fi
+
+
+
+if [[ $offset -gt $offset_critical ]]
+then
+        echo "Critical Offset.$results Offset=$offset(>$offset_critical)"
+        exit 2
+elif [[ $offset -gt $offset_warning ]]
+then        
+        echo "Warning.$results Offset=$offset(>$offset_warning)"
+        exit 1
+else
+        echo "Redis OK, $results Offset=$offset"
+        exit 0
+fi
