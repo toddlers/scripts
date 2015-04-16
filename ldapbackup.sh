@@ -1,28 +1,36 @@
 #!/usr/bin/env bash
 
+# declaring variables permanent that means they are stored forver
+# you can't change them ever.
+# you can see the readonly vairable
+# readonly -p
+# So once you start this script it will keep taking the same
+# values as it was first ran
+# Refer : http://bash.cyberciti.biz/guide/Readonly_command
+
 # slapcat binary location
-readonly SLAPCAT='/usr/sbin/slapcat'
+SLAPCAT='/usr/sbin/slapcat'
 
 # s3cmd binary location
-readonly S3CMD='/usr/bin/s3cmd'
+S3CMD='/usr/bin/s3cmd'
 
 # s3 bucket where to backup
-readonly BUCKET='s3://<BUCKET_NAME>'
+BUCKET='s3://<BUCKET_NAME>'
 
 # get today's date
-readonly DATE=$(date +%F)
+DATE=$(date +%F)
 
 # ldif filename
-readonly filename="/tmp/ldapdb-${DATE}"
+filename="/tmp/ldapdb-${DATE}"
 
 # slapd configuration file
-readonly SLAPDCONF='/etc/ldap/slapd.conf'
+SLAPDCONF='/etc/ldap/slapd.conf'
 
 # options needs to pass to slapcat command
-readonly SLAPCATOPT="-v -l ${filename} -f ${SLAPDCONF}"
+SLAPCATOPT="-v -l ${filename} -f ${SLAPDCONF}"
 
 # getting script name for logging
-readonly PROGNAME=$(basename $0)
+PROGNAME=$(basename $0)
 
 
 # logging messages to the system's standard location
