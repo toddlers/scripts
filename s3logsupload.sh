@@ -15,7 +15,6 @@ readonly INSTANCE_ID=$(${CURL} http://169.254.169.254/latest/meta-data/instance-
 # s3 bucket where to backup
 readonly BUCKET="s3://foo/application_logs/${INSTANCE_ID}/"
 
-
 # source folder to backup
 readonly BACKUP_PATH='/mnt/ephemeral/logs/'
 

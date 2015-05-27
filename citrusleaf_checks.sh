@@ -7,26 +7,26 @@
 # citrusleaf_checks.sh <evict|bytes|pct> <WARNING> <CRITICAL>
 #####
 
-NAMESPACE="namespace/devices"
+NAMESPACE="namespace/olacabs"
 # rm -f /tmp/cl*
-TEMP=/tmp/cltmp.$$
-INFO=/tmp/clinfotmp.$$
+TEMP=/tmp/astmp.$$
+INFO=/tmp/asinfotmp.$$
 touch $TEMP $INFO
 SERVER="127.0.0.1"
 PORT="3000"
-CLINFO=`which clinfo`
+ASINFO=`which asinfo`
 
 
 #### you should not have to change anything below this line ####
 
-if [[ -z ${CLINFO} ]]; then
-    printf "\nclinfo not installed\n"
+if [[ -z ${ASINFO} ]]; then
+    printf "\nasinfo not installed\n"
     exit 1
 done
 
 
 for x in $SERVER; do
-    clinfo -h $x -p $PORT -v "$NAMESPACE" > $INFO
+    asinfo -h $x -p $PORT -v "$NAMESPACE" > $INFO
 done
 
 grep "type" $INFO > $TEMP
@@ -40,15 +40,15 @@ case $1 in
         if [[ ${EVICTIONS} -ge ${2} ]]; then 
             if [[ ${EVICTIONS} -ge ${3} ]]; then 
                 echo "CRITICAL: evicted-objects=${EVICTIONS} | evicted-objects=${EVICTIONS};${2};${3};0;0"
-                rm -f /tmp/cltmp.$$ ; rm -f /tmp/clinfotmp.$$
+                rm -f /tmp/cltmp.$$ ; rm -f /tmp/asinfotmp.$$
                 exit 2
             fi
             echo "WARNING: evicted-objects=${EVICTIONS} | evicted-objects=${EVICTIONS};${2};${3};0;0"
-            rm -f /tmp/cltmp.$$ ; rm -f /tmp/clinfotmp.$$
+            rm -f /tmp/cltmp.$$ ; rm -f /tmp/asinfotmp.$$
             exit 1
         else
             echo "OK: evicted-objects=${EVICTIONS} | evicted-objects=${EVICTIONS};${2};${3};0;0"
-            rm -f /tmp/cltmp.$$ ; rm -f /tmp/clinfotmp.$$
+            rm -f /tmp/cltmp.$$ ; rm -f /tmp/asinfotmp.$$
             exit 0
         fi
     fi
@@ -85,15 +85,15 @@ case $1 in
         if [[ ${BYTES_USED_DISK} -ge ${2} ]]; then
             if [[ ${BYTES_USED_DISK} -ge ${3} ]]; then
                 echo "CRITICAL: used-bytes-disk=${BYTES_USED_DISK_GB}${BUD_SIZE} | used_bytes_disk=${BYTES_USED_DISK};${2};${3};0;0"
-                rm -f /tmp/cltmp.$$ ; rm -f /tmp/clinfotmp.$$
+                rm -f /tmp/cltmp.$$ ; rm -f /tmp/asinfotmp.$$
                 exit 2
             fi
             echo "WARNING: used-bytes-disk=${BYTES_USED_DISK_GB}${BUD_SIZE} | used_bytes_disk=${BYTES_USED_DISK};${2};${3};0;0"
-            rm -f /tmp/cltmp.$$ ; rm -f /tmp/clinfotmp.$$
+            rm -f /tmp/cltmp.$$ ; rm -f /tmp/asinfotmp.$$
             exit 1
         else
             echo "OK: used-bytes-disk=${BYTES_USED_DISK_GB}${BUD_SIZE} | used_bytes_disk=${BYTES_USED_DISK};${2};${3};0;0"
-            rm -f /tmp/cltmp.$$ ; rm -f /tmp/clinfotmp.$$
+            rm -f /tmp/cltmp.$$ ; rm -f /tmp/asinfotmp.$$
             exit 0
         fi
     fi
@@ -107,15 +107,15 @@ case $1 in
         if [[ ${AVAILABLE_PCT} -ge ${2} ]]; then
             if [[ ${AVAILABLE_PCT} -ge ${3} ]]; then
                 echo "CRITICAL: available_pct=${AVAILABLE_PCT} | available_pct=${AVAILABLE_PCT};${2};${3};0;0"
-                rm -f /tmp/cltmp.$$ ; rm -f /tmp/clinfotmp.$$
+                rm -f /tmp/cltmp.$$ ; rm -f /tmp/asinfotmp.$$
                 exit 2
             fi
             echo "WARNING: available_pct=${AVAILABLE_PCT} | available_pct=${AVAILABLE_PCT};${2};${3};0;0"
-            rm -f /tmp/cltmp.$$ ; rm -f /tmp/clinfotmp.$$
+            rm -f /tmp/cltmp.$$ ; rm -f /tmp/asinfotmp.$$
             exit 1
         else
             echo "OK: available_pct=${AVAILABLE_PCT} | available_pct=${AVAILABLE_PCT};${2};${3};0;0"
-            rm -f /tmp/cltmp.$$ ; rm -f /tmp/clinfotmp.$$
+            rm -f /tmp/cltmp.$$ ; rm -f /tmp/asinfotmp.$$
             exit 0
         fi
     fi
