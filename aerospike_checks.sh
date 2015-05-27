@@ -22,7 +22,7 @@ ASINFO=`which asinfo`
 if [[ -z ${ASINFO} ]]; then
     printf "\nasinfo not installed\n"
     exit 1
-done
+fi
 
 
 for x in $SERVER; do
