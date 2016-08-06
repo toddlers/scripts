@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	//	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/urfave/cli"
@@ -19,12 +19,12 @@ func main() {
 
 	svc := iam.New(sess)
 
-	//params := &iam.ListAccessKeysInput{
-	//	MaxItems: aws.Int64(1000),
-	//}
+	params := &iam.ListAccessKeysInput{
+		MaxItems: aws.Int64(1000),
+	}
 
-	//resp, err := svc.ListAccessKeys(params)
-	resp, err := svc.ListAccessKeys(nil)
+	resp, err := svc.ListAccessKeys(params)
+	//resp, err := svc.ListAccessKeys(nil)
 
 	if err != nil {
 		log.Fatal(err)
