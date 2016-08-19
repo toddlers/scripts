@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+
+https://robots.thoughtbot.com/the-unix-shells-humble-if
+
+
+is_admin() {
+return 1
+}
+
+if is_admin;then
+echo "hello admin"
+fi
