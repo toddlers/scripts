@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#https://github.com/hackman/linux-sysadmin-course/blob/master/additional/lecture-03/proc-pid-status-explained.txt
 # this will print the long running child of cron
 # usage : cron_child_alert.sh <threshold in sec>
 
