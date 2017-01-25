@@ -1,3 +1,8 @@
+
+// traverse a given dir with maxdepth 1(like find) and prints alphabetically 
+// sorted file names without extension
+// Usage : dirwalk.go <dir_name>
+
 package main
 
 import (
@@ -7,6 +12,9 @@ import (
 	"path/filepath"
 	"strings"
 )
+
+
+// Given an array , this will return unique elements in array
 
 func UniqueNames(arg []string) []string {
 	tempMap := make(map[string]uint8)
@@ -19,6 +27,8 @@ func UniqueNames(arg []string) []string {
 	}
 	return tempArray
 }
+
+// Checks if the path provided exists or not
 
 func Exists(name string) bool {
 	if _, err := os.Stat(name); err != nil {
@@ -35,6 +45,17 @@ func main() {
 	searchDir := flag.Arg(0)
 	fileList := []string{}
 	var aPath string
+
+	if len(searchDir) == 0 {
+		fmt.Println("Please specify the dir name")
+		os.Exit(1)
+	}
+
+	if !Exists(searchDir) {
+		fmt.Println("Dir doesnt exists")
+		os.Exit(1)
+	}
+
 	err := filepath.Walk(searchDir, func(path string, f os.FileInfo, err error) error {
 		if Exists(path) {
 			fileInfo, err := os.Lstat(path)
