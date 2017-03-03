@@ -9,40 +9,51 @@ import (
 	"os"
 )
 
-func getSession() *session.Session {
+func getSession() *ec2.EC2 {
 	sess, err := session.NewSession(&aws.Config{Region: aws.String("ap-southeast-1")})
 	if err != nil {
 		fmt.Println("failed to create session", err)
 	}
-	return sess
+	return ec2.New(sess)
 }
 
-func findInstance(ipaddr string) {
-	sess := getSession()
-	svc := ec2.New(sess)
+func instanceId(ipadd string) string {
+	svc := getSession()
 	params := &ec2.DescribeNetworkInterfacesInput{
 		Filters: []*ec2.Filter{
 			{
 				Name: aws.String("addresses.private-ip-address"),
 				Values: []*string{
-					aws.String(ipaddr),
+					aws.String(ipadd),
 				},
 			},
 		},
 	}
+
 	resp, err := svc.DescribeNetworkInterfaces(params)
 	if err != nil {
 		panic(err)
 	}
+	return *resp.NetworkInterfaces[0].Attachment.InstanceId
+}
+
+func findInstance(ipaddr string) {
+	svc := getSession()
+	iid := instanceId(ipaddr)
 	ec2params := &ec2.DescribeInstancesInput{
 
 		InstanceIds: []*string{
-			aws.String(*resp.NetworkInterfaces[0].Attachment.InstanceId),
+			aws.String(iid),
 		},
 	}
 	instanceInfo, err := svc.DescribeInstances(ec2params)
+	if err != nil {
+		panic(err)
+	}
 	fmt.Println(instanceInfo.Reservations[0].Instances[0].Tags)
 }
+
+//func find_elb()
 
 func main() {
 	var ipad string
@@ -52,7 +63,7 @@ func main() {
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:        "ipaddr,i",
-			Usage:       "find_instance.go --ipaddr <IP_ADDR>",
+			Usage:       "IP address of the instance",
 			Destination: &ipad,
 		},
 	}
@@ -66,5 +77,4 @@ func main() {
 
 	app.Run(os.Args)
 
-	//fmt.Println(*resp.NetworkInterfaces[0].Attachment.InstanceId)
 }
