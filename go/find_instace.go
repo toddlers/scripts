@@ -5,20 +5,50 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/urfave/cli"
 	"os"
 )
 
-func getSession() *ec2.EC2 {
-	sess, err := session.NewSession(&aws.Config{Region: aws.String("ap-southeast-1")})
-	if err != nil {
-		fmt.Println("failed to create session", err)
+func check(e error) {
+	if e != nil {
+		panic(e)
 	}
-	return ec2.New(sess)
 }
 
-func instanceId(ipadd string) string {
-	svc := getSession()
+func getSession() *session.Session {
+	sess, err := session.NewSession(&aws.Config{Region: aws.String("ap-southeast-1")})
+	check(err)
+	return sess
+}
+func searchInstance(iid string) {
+	elbs := elbInfo("")
+	for _, l := range elbs.LoadBalancerDescriptions {
+		for _, i := range l.Instances {
+			if *i.InstanceId == iid {
+				fmt.Println("Load Balancer Name : ", *l.LoadBalancerName)
+			}
+		}
+	}
+}
+
+func elbInfo(marker string) elb.DescribeLoadBalancersOutput {
+	var params *elb.DescribeLoadBalancersInput
+	sess := getSession()
+	svc := elb.New(sess)
+	if len(marker) > 0 {
+		params = &elb.DescribeLoadBalancersInput{
+			Marker: aws.String(marker),
+		}
+	} else {
+		params = &elb.DescribeLoadBalancersInput{}
+	}
+	resp, err := svc.DescribeLoadBalancers(params)
+	check(err)
+	return *resp
+}
+
+func instanceId(svc *ec2.EC2, ipadd string) string {
 	params := &ec2.DescribeNetworkInterfacesInput{
 		Filters: []*ec2.Filter{
 			{
@@ -31,15 +61,14 @@ func instanceId(ipadd string) string {
 	}
 
 	resp, err := svc.DescribeNetworkInterfaces(params)
-	if err != nil {
-		panic(err)
-	}
+	check(err)
 	return *resp.NetworkInterfaces[0].Attachment.InstanceId
 }
 
 func findInstance(ipaddr string) {
-	svc := getSession()
-	iid := instanceId(ipaddr)
+	sess := getSession()
+	svc := ec2.New(sess)
+	iid := instanceId(svc, ipaddr)
 	ec2params := &ec2.DescribeInstancesInput{
 
 		InstanceIds: []*string{
@@ -47,7 +76,36 @@ func findInstance(ipaddr string) {
 		},
 	}
 	instanceInfo, err := svc.DescribeInstances(ec2params)
-	if err != nil {
+	check(err)
+	fmt.Println(instanceInfo.Reservations[0].Instances[0].Tags)
+	searchInstance(iid)
+}
+
+//func find_elb()
+
+func main() {
+	var ipad string
+
+	app := cli.NewApp()
+
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:        "ipaddr,i",
+			Usage:       "IP address of the instance",
+			Destination: &ipad,
+		},
+	}
+
+	app.Action = func(c *cli.Context) error {
+		if len(ipad) > 0 {
+			findInstance(ipad)
+		}
+		return nil
+	}
+
+	app.Run(os.Args)
+
+}
 		panic(err)
 	}
 	fmt.Println(instanceInfo.Reservations[0].Instances[0].Tags)
