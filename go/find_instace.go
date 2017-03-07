@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/urfave/cli"
 	"os"
+	"strings"
 )
 
 func check(e error) {
@@ -21,34 +22,56 @@ func getSession() *session.Session {
 	check(err)
 	return sess
 }
-func searchInstance(iid string) {
-	elbs := elbInfo("")
+
+func searchInstance(elbs *elb.DescribeLoadBalancersOutput, iid string) ([]string, bool) {
+	var lbname []string
+	found := false
 	for _, l := range elbs.LoadBalancerDescriptions {
 		for _, i := range l.Instances {
 			if *i.InstanceId == iid {
-				fmt.Println("Load Balancer Name : ", *l.LoadBalancerName)
+				lbname = append(lbname, *l.LoadBalancerName)
+				found = true
 			}
 		}
 	}
+	return lbname, found
 }
 
-func elbInfo(marker string) elb.DescribeLoadBalancersOutput {
+var lbNames []string
+
+func elbInfo(marker string, firstCall bool, iid string) []string {
 	var params *elb.DescribeLoadBalancersInput
+
 	sess := getSession()
 	svc := elb.New(sess)
-	if len(marker) > 0 {
+
+	if len(marker) == 0 && !firstCall {
+		return lbNames
+	}
+
+	if len(marker) == 0 {
+		params = &elb.DescribeLoadBalancersInput{}
+	} else {
 		params = &elb.DescribeLoadBalancersInput{
 			Marker: aws.String(marker),
 		}
-	} else {
-		params = &elb.DescribeLoadBalancersInput{}
 	}
+
 	resp, err := svc.DescribeLoadBalancers(params)
 	check(err)
-	return *resp
-}
+	lbname, found := searchInstance(resp, iid)
+	if found {
+		lbNames = append(lbNames, lbname...)
+	}
 
-func instanceId(svc *ec2.EC2, ipadd string) string {
+	if resp.NextMarker != nil {
+		marker = *resp.NextMarker
+	} else {
+		marker = ""
+	}
+	return elbInfo(marker, false, iid)
+}
+func instanceID(svc *ec2.EC2, ipadd string) string {
 	params := &ec2.DescribeNetworkInterfacesInput{
 		Filters: []*ec2.Filter{
 			{
@@ -68,7 +91,7 @@ func instanceId(svc *ec2.EC2, ipadd string) string {
 func findInstance(ipaddr string) {
 	sess := getSession()
 	svc := ec2.New(sess)
-	iid := instanceId(svc, ipaddr)
+	iid := instanceID(svc, ipaddr)
 	ec2params := &ec2.DescribeInstancesInput{
 
 		InstanceIds: []*string{
@@ -78,40 +101,10 @@ func findInstance(ipaddr string) {
 	instanceInfo, err := svc.DescribeInstances(ec2params)
 	check(err)
 	fmt.Println(instanceInfo.Reservations[0].Instances[0].Tags)
-	searchInstance(iid)
+	lbNames = elbInfo("", true, iid)
+	fmt.Println("\n ELBs Instance registered with : ", strings.Join(lbNames, ","))
 }
 
-//func find_elb()
-
-func main() {
-	var ipad string
-
-	app := cli.NewApp()
-
-	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:        "ipaddr,i",
-			Usage:       "IP address of the instance",
-			Destination: &ipad,
-		},
-	}
-
-	app.Action = func(c *cli.Context) error {
-		if len(ipad) > 0 {
-			findInstance(ipad)
-		}
-		return nil
-	}
-
-	app.Run(os.Args)
-
-}
-		panic(err)
-	}
-	fmt.Println(instanceInfo.Reservations[0].Instances[0].Tags)
-}
-
-//func find_elb()
 
 func main() {
 	var ipad string
