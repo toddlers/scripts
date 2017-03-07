@@ -1,3 +1,8 @@
+// Given an instnace id , it will return an array of lb name 
+// instance registered with
+
+// First Attempt on recursion in golang :)
+
 package main
 
 import (
@@ -60,7 +65,6 @@ func elbInfo(marker string, first_call bool) []string {
 	if found {
 		lbNames = append(lbNames, lbname...)
 	}
-
 	if resp.NextMarker != nil {
 		marker = *resp.NextMarker
 	} else {
