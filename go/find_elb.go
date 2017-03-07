@@ -65,6 +65,9 @@ func elbInfo(marker string, first_call bool) []string {
 	if found {
 		lbNames = append(lbNames, lbname...)
 	}
+	
+	//An empty string value "" and nil are not the same thing
+	
 	if resp.NextMarker != nil {
 		marker = *resp.NextMarker
 	} else {
