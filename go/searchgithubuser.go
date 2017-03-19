@@ -86,9 +86,6 @@ func main() {
 	// parse flags
 	flag.Parse()
 
-	// if user does not supply flags , print usage
-	// we can clean this up later by putting this
-	// into its own function
 	if flag.NFlag() == 0 {
 		printUsage()
 	}
