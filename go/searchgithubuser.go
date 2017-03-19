@@ -97,5 +97,9 @@ func main() {
 		fmt.Println(`Name:		`, result.Name)
 		fmt.Println(`Email:		`, result.Email)
 		fmt.Println(`Bio:		`, result.Bio)
+		fmt.Println(`Location:		`, result.Location)
+		fmt.Println(`Created :		`, result.CreatedAt)
+		fmt.Println(`Last Updated :		`, result.UpdatedAt)
+		fmt.Println(`Public Gists :		`, result.PublicGists)
 		fmt.Println("")
 	}
