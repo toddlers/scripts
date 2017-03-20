@@ -45,7 +45,7 @@ func main() {
 		}
 		setPerms, err := svc.SetPermission(params)
 		check(err)
-		if unsafe.Sizeof(setPerms) == 0 {
+		if unsafe.Sizeof(setPerms) == 8 {
 			fmt.Printf("Added sudo permissions to stack : %s", *resp.Stacks[i].Name)
 		}
 	}
