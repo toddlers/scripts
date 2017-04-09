@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	flag "github.com/ogier/pflag"
 	"net"
 	"net/smtp"
 	"strings"
@@ -27,12 +28,14 @@ func NewSmtpError(err error) SmtpError {
 }
 
 var (
+	email               string
 	ErrUnresolvableHost = errors.New("unresolvable host")
 )
 
-const (
-	emailaddr = "suresh.prajapati@olacabs.com"
-)
+
+func init() {
+	flag.StringVarP(&email, "email", "e", "foo@example.com", "Email Address")
+}
 
 func split(email string) (account, host string) {
 	i := strings.LastIndexByte(email, '@')
@@ -74,10 +77,11 @@ func validateHost(email string) error {
 }
 
 func main() {
-	err := validateHost(emailaddr)
+	flag.Parse()
+	err := validateHost(email)
 	if smtpErr, ok := err.(SmtpError); ok && err != nil {
 		fmt.Printf("Code: %s, Msg: %s\n", smtpErr.Code(), smtpErr)
 	} else {
-		fmt.Println("Email address is valid")
+		fmt.Println(email, " is valid email address")
 	}
 }
