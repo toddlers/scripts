@@ -63,7 +63,7 @@ func validateHost(email string) error {
 		return NewSmtpError(err)
 	}
 
-	err = client.Mail("suresh.prajapati@olacabs.com")
+	err = client.Mail(email)
 	if err != nil {
 		return NewSmtpError(err)
 	}
