@@ -26,6 +26,10 @@ type SSHClient struct {
 	Port   int
 }
 
+func (client *SSHClient) String() string {
+	return fmt.Sprintf("%s:%d", client.Host, client.Port)
+}
+
 func (client *SSHClient) RunCommand(cmd *SSHCommand) error {
 	var (
 		session *ssh.Session
@@ -81,7 +85,7 @@ func (client *SSHClient) prepareCommand(session *ssh.Session, cmd *SSHCommand) e
 }
 
 func (client *SSHClient) newSession() (*ssh.Session, error) {
-	connection, err := ssh.Dial("tcp", fmt.Sprintf("%s:%d", client.Host, client.Port), client.Config)
+	connection, err := ssh.Dial("tcp", client.String(), client.Config)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to dail: %s", err)
 	}
