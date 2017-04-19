@@ -108,6 +108,8 @@ func (client *SSHClient) newSession() (*ssh.Session, error) {
 	return session, nil
 }
 
+/* Uncomment when no ssh agent running
+
 func PublicKeyFile(file string) ssh.AuthMethod {
 	buffer, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -121,6 +123,8 @@ func PublicKeyFile(file string) ssh.AuthMethod {
 	return ssh.PublicKeys(key)
 
 }
+
+*/
 
 func SSHAgent() ssh.AuthMethod {
 	if sshAgent, err := net.Dial("unix", os.Getenv("SSH_AUTH_SOCK")); err == nil {
@@ -146,6 +150,7 @@ func main() {
 	sshConfig := &ssh.ClientConfig{
 		User: *uname,
 		Auth: []ssh.AuthMethod{
+			//PublicKeyFile(<PATH_TO_PUBLIC_KEY>)
 			SSHAgent(),
 		},
 	}
