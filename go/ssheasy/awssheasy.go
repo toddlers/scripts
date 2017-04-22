@@ -29,13 +29,11 @@ func check(err error) {
 
 func getSession() *session.Session {
 	sess, err := session.NewSession(&aws.Config{Region: aws.String("us-east-1")})
-	//sess, err := session.NewSession(&aws.Config{})
 	check(err)
 	return sess
 }
 
 func getInstanceID(svc *ec2.EC2, ipadd string) string {
-	log.Println("getInstanceID")
 	params := &ec2.DescribeNetworkInterfacesInput{
 		Filters: []*ec2.Filter{
 			{
@@ -48,14 +46,11 @@ func getInstanceID(svc *ec2.EC2, ipadd string) string {
 	}
 	resp, err := svc.DescribeNetworkInterfaces(params)
 	BackOffWaitIfError(err, "aws-api")
-	//check(err)
-
 	log.Println(*resp.NetworkInterfaces[0].Attachment.InstanceId)
 	return *resp.NetworkInterfaces[0].Attachment.InstanceId
 }
 
 func describeSG(svc *ec2.EC2, ipadd string) []string {
-	log.Println("describeSG")
 	iid := getInstanceID(svc, ipadd)
 	var sgid []string
 	ec2params := &ec2.DescribeInstancesInput{
@@ -69,7 +64,6 @@ func describeSG(svc *ec2.EC2, ipadd string) []string {
 		check(err)
 	}
 
-	//fmt.Println(instanceInfo.Reservations[0].Instances[0].SecurityGroups)
 	for _, group := range instanceInfo.Reservations[0].Instances[0].SecurityGroups {
 		sgid = append(sgid, *group.GroupId)
 	}
@@ -79,7 +73,6 @@ func describeSG(svc *ec2.EC2, ipadd string) []string {
 }
 
 func whitelistIP(client *ec2.EC2, input IPInput, jip string) {
-	log.Println("whitelistIP")
 	var groups []string
 	groups = describeSG(client, jip)
 	log.Println(groups)
@@ -105,7 +98,6 @@ func whitelistIP(client *ec2.EC2, input IPInput, jip string) {
 }
 
 func revokeWhitelisting(client *ec2.EC2, input IPInput, jip string) {
-	log.Println("revokeWhitelisting")
 	var groups []string
 	groups = describeSG(client, jip)
 	for _, group := range groups {
@@ -128,21 +120,6 @@ func revokeWhitelisting(client *ec2.EC2, input IPInput, jip string) {
 	}
 }
 
-/*
-func printIpRanges(groups []*ec2.SecurityGroup) {
-	w := new(tabwriter.Writer)
-	w.Init(os.Stdout, 0, 8, 0, '\t', 0)
-	for _, group := range groups {
-		for _, perm := range group.IpPermissions {
-			for _, cidr := range perm.IpRanges {
-				fmt.Fprintf(w, "%v\t%v\t%v\t%v\n", *group.GroupName, *perm.IpProtocol, *cidr.CidrIp, *perm.FromPort)
-			}
-		}
-	}
-	w.Flush()
-}
-*/
-
 func main() {
 	log.Println("main")
 
@@ -155,7 +132,6 @@ func main() {
 	svc := ec2.New(sess)
 
 	flag.Parse()
-	log.Println(*jip)
 
 	var myIPAddr string
 	protocol := "tcp"
@@ -172,8 +148,10 @@ func main() {
 		CidrIp:     &myIPAddr,
 	}
 	if *clean == true {
+		log.Println("Revoking SSH for: ", myIPAddr)
 		revokeWhitelisting(svc, inp, *jip)
 	} else {
+		log.Println("Adding SSH for: ", myIPAddr)
 		whitelistIP(svc, inp, *jip)
 	}
 }
