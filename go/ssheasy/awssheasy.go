@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	//	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -46,7 +45,7 @@ func getInstanceID(svc *ec2.EC2, ipadd string) string {
 	}
 	resp, err := svc.DescribeNetworkInterfaces(params)
 	BackOffWaitIfError(err, "aws-api")
-	log.Println(*resp.NetworkInterfaces[0].Attachment.InstanceId)
+	log.Println("Instance ID: ", *resp.NetworkInterfaces[0].Attachment.InstanceId)
 	return *resp.NetworkInterfaces[0].Attachment.InstanceId
 }
 
@@ -67,7 +66,7 @@ func describeSG(svc *ec2.EC2, ipadd string) []string {
 	for _, group := range instanceInfo.Reservations[0].Instances[0].SecurityGroups {
 		sgid = append(sgid, *group.GroupId)
 	}
-	log.Println(sgid)
+	log.Println("Security groups attached to instance :", sgid)
 	return sgid
 
 }
@@ -75,8 +74,8 @@ func describeSG(svc *ec2.EC2, ipadd string) []string {
 func whitelistIP(client *ec2.EC2, input IPInput, jip string) {
 	var groups []string
 	groups = describeSG(client, jip)
-	log.Println(groups)
 	for _, group := range groups {
+		log.Printf("Trying to whitelist IP: %s in SG: %s", *input.CidrIp, group)
 		_, err := client.AuthorizeSecurityGroupIngress(&ec2.AuthorizeSecurityGroupIngressInput{
 			GroupId:    &group,
 			IpProtocol: input.IpProtocol,
@@ -92,6 +91,9 @@ func whitelistIP(client *ec2.EC2, input IPInput, jip string) {
 			} else {
 				continue
 			}
+		} else {
+			log.Printf("Whitelisted IP: %s in SG: %s", *input.CidrIp, group)
+			return
 		}
 
 	}
@@ -101,6 +103,7 @@ func revokeWhitelisting(client *ec2.EC2, input IPInput, jip string) {
 	var groups []string
 	groups = describeSG(client, jip)
 	for _, group := range groups {
+		log.Println("Trying whitelisting in", group)
 		_, err := client.RevokeSecurityGroupIngress(&ec2.RevokeSecurityGroupIngressInput{
 			GroupId:    &group,
 			IpProtocol: input.IpProtocol,
@@ -116,17 +119,20 @@ func revokeWhitelisting(client *ec2.EC2, input IPInput, jip string) {
 			} else {
 				continue
 			}
+		} else {
+			log.Printf("Revoked IP: %s from SG: %s", *input.CidrIp, group)
+			return
 		}
 	}
 }
 
 func main() {
-	log.Println("main")
 
 	sip := flag.String("sip", "", "source IP address")
 	port := flag.Int("port", 22, "Port number to allow")
 	jip := flag.String("jip", "", "Jump Server IP address")
 	clean := flag.Bool("clean", false, "Clean Security Groups")
+	proto := flag.String("proto", "tcp", "Protocol for whitelising")
 
 	sess := getSession()
 	svc := ec2.New(sess)
@@ -134,7 +140,6 @@ func main() {
 	flag.Parse()
 
 	var myIPAddr string
-	protocol := "tcp"
 
 	if *sip == "" {
 		ipaddr, _ := getIP()
@@ -142,7 +147,7 @@ func main() {
 	}
 
 	inp := IPInput{
-		IpProtocol: &protocol,
+		IpProtocol: proto,
 		FromPort:   aws.Int64(int64(*port)),
 		ToPort:     aws.Int64(int64(*port)),
 		CidrIp:     &myIPAddr,
