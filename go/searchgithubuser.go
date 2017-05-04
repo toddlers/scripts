@@ -103,3 +103,4 @@ func main() {
 		fmt.Println(`Public Gists :		`, result.PublicGists)
 		fmt.Println("")
 	}
+}
