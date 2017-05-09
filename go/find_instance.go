@@ -17,8 +17,8 @@ func check(e error) {
 	}
 }
 
-func getSession() *session.Session {
-	sess, err := session.NewSession(&aws.Config{Region: aws.String("ap-southeast-1")})
+func getSession(region string) *session.Session {
+	sess, err := session.NewSession(&aws.Config{Region: aws.String(region)})
 	check(err)
 	return sess
 }
@@ -39,10 +39,10 @@ func searchInstance(elbs *elb.DescribeLoadBalancersOutput, iid string) ([]string
 
 var lbNames []string
 
-func elbInfo(marker string, firstCall bool, iid string) []string {
+func elbInfo(marker string, firstCall bool, iid, region string) []string {
 	var params *elb.DescribeLoadBalancersInput
 
-	sess := getSession()
+	sess := getSession(region)
 	svc := elb.New(sess)
 
 	if len(marker) == 0 && !firstCall {
@@ -64,13 +64,16 @@ func elbInfo(marker string, firstCall bool, iid string) []string {
 		lbNames = append(lbNames, lbname...)
 	}
 
+	//An empty string value "" and nil are not the same thing
+
 	if resp.NextMarker != nil {
 		marker = *resp.NextMarker
 	} else {
 		marker = ""
 	}
-	return elbInfo(marker, false, iid)
+	return elbInfo(marker, false, iid, region)
 }
+
 func instanceID(svc *ec2.EC2, ipadd string) string {
 	params := &ec2.DescribeNetworkInterfacesInput{
 		Filters: []*ec2.Filter{
@@ -88,8 +91,8 @@ func instanceID(svc *ec2.EC2, ipadd string) string {
 	return *resp.NetworkInterfaces[0].Attachment.InstanceId
 }
 
-func findInstance(ipaddr string) {
-	sess := getSession()
+func findInstance(ipaddr, region string) {
+	sess := getSession(region)
 	svc := ec2.New(sess)
 	iid := instanceID(svc, ipaddr)
 	ec2params := &ec2.DescribeInstancesInput{
@@ -101,13 +104,12 @@ func findInstance(ipaddr string) {
 	instanceInfo, err := svc.DescribeInstances(ec2params)
 	check(err)
 	fmt.Println(instanceInfo.Reservations[0].Instances[0].Tags)
-	lbNames = elbInfo("", true, iid)
+	lbNames = elbInfo("", true, iid, region)
 	fmt.Println("\n ELBs Instance registered with : ", strings.Join(lbNames, ","))
 }
 
-
 func main() {
-	var ipad string
+	var ipad, region string
 
 	app := cli.NewApp()
 
@@ -117,11 +119,16 @@ func main() {
 			Usage:       "IP address of the instance",
 			Destination: &ipad,
 		},
+		cli.StringFlag{
+			Name:        "region,r",
+			Usage:       "AWS Region",
+			Destination: &region,
+		},
 	}
 
 	app.Action = func(c *cli.Context) error {
 		if len(ipad) > 0 {
-			findInstance(ipad)
+			findInstance(ipad, region)
 		}
 		return nil
 	}
