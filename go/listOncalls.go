@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"github.com/PagerDuty/go-pagerduty"
 	"log"
 	"time"
@@ -34,7 +33,7 @@ func (pd *PagerDutyOptions) getScheduleId() string {
 			}
 		}
 	} else {
-		fmt.Println("Error : ", err)
+		log.Println("Error : ", err)
 	}
 	return scheduleID
 }
@@ -48,7 +47,7 @@ func (pd *PagerDutyOptions) getEscalationPolicyId() string {
 	if escalResponse, err := pd.client.ListEscalationPolicies(escalPolicyOpts); err == nil {
 		escalationPolicyId = escalResponse.EscalationPolicies[0].ID
 	} else {
-		fmt.Println("Error :", err)
+		log.Println("Error :", err)
 	}
 	return escalationPolicyId
 }
@@ -89,8 +88,8 @@ func main() {
 	flag.Parse()
 
 	if *schedule == "" || *token == "" || *espol == "" {
-		fmt.Println("Missing input")
-		fmt.Println("Usage:")
+		log.Println("Missing input")
+		log.Println("Usage:")
 		flag.PrintDefaults()
 		return
 	}
