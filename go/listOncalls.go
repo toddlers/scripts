@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/PagerDuty/go-pagerduty"
+	"log"
 	"time"
 )
 
@@ -12,20 +13,22 @@ type oncalls struct {
 	schedule string
 }
 
-func GetOnCalls(authtoken string, schedule, escalPolicy string) {
+type PagerDutyOptions struct {
+	escalationPolicy string
+	schedule         string
+	client           *pagerduty.Client
+}
 
-	var oc oncalls
+func (pd *PagerDutyOptions) getScheduleId() string {
 
 	var scheduleOptions pagerduty.ListSchedulesOptions
 
 	var scheduleID string
 
-	client := pagerduty.NewClient(authtoken)
-
-	if resp, err := client.ListSchedules(scheduleOptions); err == nil {
+	if resp, err := pd.client.ListSchedules(scheduleOptions); err == nil {
 		for _, sched := range resp.Schedules {
 
-			if schedule == sched.Name {
+			if pd.schedule == sched.Name {
 				scheduleID = sched.ID
 				break
 			}
@@ -33,16 +36,31 @@ func GetOnCalls(authtoken string, schedule, escalPolicy string) {
 	} else {
 		fmt.Println("Error : ", err)
 	}
+	return scheduleID
+}
+
+func (pd *PagerDutyOptions) getEscalationPolicyId() string {
 
 	var escalationPolicyId string
 
-	escalPolicyOpts := pagerduty.ListEscalationPoliciesOptions{Query: escalPolicy}
+	escalPolicyOpts := pagerduty.ListEscalationPoliciesOptions{Query: pd.escalationPolicy}
 
-	if escalResponse, err := client.ListEscalationPolicies(escalPolicyOpts); err == nil {
+	if escalResponse, err := pd.client.ListEscalationPolicies(escalPolicyOpts); err == nil {
 		escalationPolicyId = escalResponse.EscalationPolicies[0].ID
 	} else {
 		fmt.Println("Error :", err)
 	}
+	return escalationPolicyId
+}
+
+func (pd *PagerDutyOptions) GetOnCalls() oncalls {
+
+	var oc oncalls
+
+	scheduleID := pd.getScheduleId()
+	log.Println("Schedule ID is : ", scheduleID)
+	escalationPolicyId := pd.getEscalationPolicyId()
+	log.Println("Escalation Policy ID is : ", escalationPolicyId)
 
 	now := time.Now()
 
@@ -52,20 +70,37 @@ func GetOnCalls(authtoken string, schedule, escalPolicy string) {
 		EscalationPolicyIDs: []string{escalationPolicyId},
 	}
 
-	oncallResponse, _ := client.ListOnCalls(onCallOptions)
+	oncallResponse, _ := pd.client.ListOnCalls(onCallOptions)
 
 	for _, p := range oncallResponse.OnCalls {
 		oc.name = p.User.Summary
 		oc.schedule = p.Schedule.Summary
 	}
 
-	fmt.Printf("%s\t%s\n", oc.name, oc.schedule)
+	return oc
+
 }
 
 func main() {
 	schedule := flag.String("schedule", "", "Schedule ID")
 	token := flag.String("token", "", "Pagerduty auth token")
 	espol := flag.String("espol", "", "escalation policy")
+
 	flag.Parse()
-	GetOnCalls(*token, *schedule, *espol)
+
+	if *schedule == "" || *token == "" || *espol == "" {
+		fmt.Println("Missing input")
+		fmt.Println("Usage:")
+		flag.PrintDefaults()
+		return
+	}
+
+	pdOpts := PagerDutyOptions{
+		escalationPolicy: *espol,
+		schedule:         *schedule,
+		client:           pagerduty.NewClient(*token),
+	}
+
+	onCalls := pdOpts.GetOnCalls()
+	log.Printf("Name: %s\t Schedule : %s\n", onCalls.name, onCalls.schedule)
 }
