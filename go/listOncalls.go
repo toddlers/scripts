@@ -22,30 +22,30 @@ func (pd *PagerDutyOptions) getScheduleId() string {
 
 	var scheduleOptions pagerduty.ListSchedulesOptions
 
-	var scheduleID string
+	var scheduleId string
 
 	if resp, err := pd.client.ListSchedules(scheduleOptions); err == nil {
 		for _, sched := range resp.Schedules {
 
 			if pd.schedule == sched.Name {
-				scheduleID = sched.ID
+				scheduleId = sched.ID
 				break
 			}
 		}
 	} else {
 		log.Println("Error : ", err)
 	}
-	return scheduleID
+	return scheduleId
 }
 
 func (pd *PagerDutyOptions) getEscalationPolicyId() string {
 
 	var escalationPolicyId string
 
-	escalPolicyOpts := pagerduty.ListEscalationPoliciesOptions{Query: pd.escalationPolicy}
+	escalationPolicyOptions := pagerduty.ListEscalationPoliciesOptions{Query: pd.escalationPolicy}
 
-	if escalResponse, err := pd.client.ListEscalationPolicies(escalPolicyOpts); err == nil {
-		escalationPolicyId = escalResponse.EscalationPolicies[0].ID
+	if resp, err := pd.client.ListEscalationPolicies(escalationPolicyOptions); err == nil {
+		escalationPolicyId = resp.EscalationPolicies[0].ID
 	} else {
 		log.Println("Error :", err)
 	}
@@ -56,15 +56,15 @@ func (pd *PagerDutyOptions) GetOnCalls() oncalls {
 
 	var oc oncalls
 
-	scheduleID := pd.getScheduleId()
-	log.Println("Schedule ID is : ", scheduleID)
+	scheduleId := pd.getScheduleId()
+	log.Println("Schedule ID is : ", scheduleId)
 	escalationPolicyId := pd.getEscalationPolicyId()
 	log.Println("Escalation Policy ID is : ", escalationPolicyId)
 
 	now := time.Now()
 
 	onCallOptions := pagerduty.ListOnCallOptions{
-		ScheduleIDs:         []string{scheduleID},
+		ScheduleIDs:         []string{scheduleId},
 		Since:               now.String(),
 		EscalationPolicyIDs: []string{escalationPolicyId},
 	}
