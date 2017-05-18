@@ -26,7 +26,7 @@ func main() {
 	if (info.Mode() & os.ModeCharDevice) == os.ModeCharDevice {
 		fmt.Println("The command is intended to work with pipes")
 		fmt.Println("Usage:")
-		fmt.Println(" echo \"your text\" OR cat yourfile.txt| searchr -pattern=<your_pattern> -channel=<channel_id>")
+		fmt.Println(" echo \"your text\" OR cat yourfile.txt| slacktee -token=<token> -channel=<channel_id>")
 	} else if info.Size() > 0 {
 		reader := bufio.NewReader(os.Stdin)
 		sendMessage(*token, *channel, reader)
