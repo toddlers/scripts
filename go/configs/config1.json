@@ -1,0 +1,23 @@
+{
+  "clusters": [
+    {
+      "name": "Dev",
+      "datacenre": "Local",
+      "nodes": [
+        "dev1.company.com",
+        "dev2.company.com"
+      ]
+    },
+    {
+      "name": "Prod",
+      "datacenre": "Amazon",
+      "nodes": [
+        "prod1.company.com",
+        "prod2.company.com",
+        "prod3.company.com"
+      ]
+    }
+  ],
+  "min_replicas": 1,
+  "max_replicas": 5
+}
