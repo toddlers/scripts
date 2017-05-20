@@ -1,0 +1,20 @@
+{{with .Account -}}
+	Dear {{.FirstName}} {{.LastName}},
+{{- end }}
+
+Below are your account statement details for period from {{.FromDate|formatAsDate}} to {{.ToDate| formatAsDate}}.
+
+{{if .Purchases -}}
+	Your Purchases:
+	{{- range .Purchases }}
+		{{ .Date|formatAsDate}} {{printf "%-20s" .Description }} {{ .AmountInCents|formatAsDollars -}}
+	{{- end}}
+{{- else }}
+	You didnt make any purchases during the period.
+	{{- end }}
+
+
+	{{ $note := urgentNote .Account -}}
+	{{ if $note -}}
+		Note: {{$note}}
+	{{- end}}
