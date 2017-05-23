@@ -1,3 +1,4 @@
+// Usage: curl localhost:8080/getConfig?key="<KEY_NAME>"
 package main
 
 import (
@@ -21,7 +22,6 @@ import (
 
 type s3Proxy struct {
 	bucket  string
-	config  string
 	timeout time.Duration
 	port    string
 	region  string
@@ -54,6 +54,7 @@ func bucketName() (string, error) {
 	}
 }
 
+/*
 func configFileName() (string, error) {
 	envConfigFile := os.Getenv("CONFIGFILE")
 	if len(envConfigFile) != 0 {
@@ -62,6 +63,7 @@ func configFileName() (string, error) {
 		return "", errors.New("No config file name provided")
 	}
 }
+*/
 
 func timeout() time.Duration {
 	envTimeout := os.Getenv("TIMEOUT")
@@ -110,6 +112,7 @@ func getSession(region string) *session.Session {
 }
 
 func getConfig(w http.ResponseWriter, r *http.Request, s3p s3Proxy) {
+	keyName := r.FormValue("key")
 
 	sess := getSession(s3p.region)
 	svc := s3.New(sess)
@@ -133,7 +136,7 @@ func getConfig(w http.ResponseWriter, r *http.Request, s3p s3Proxy) {
 	start := time.Now().UTC()
 	result, err := svc.GetObjectWithContext(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(s3p.bucket),
-		Key:    aws.String(s3p.config),
+		Key:    aws.String(keyName),
 	})
 	end := time.Now().UTC()
 	delta := end.Sub(start)
@@ -180,14 +183,6 @@ func main() {
 		s3p.bucket = bucketName
 	} else {
 		log.Println(berr)
-		os.Exit(1)
-	}
-
-	if configName, cerr := configFileName(); cerr == nil {
-		log.Println("Config File Name :", configName)
-		s3p.config = configName
-	} else {
-		log.Println(cerr)
 		os.Exit(1)
 	}
 
