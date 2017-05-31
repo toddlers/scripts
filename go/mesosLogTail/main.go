@@ -148,30 +148,28 @@ func main() {
 
 	mssConfig := mesosConfig{mesosEndpoint: fmt.Sprintf("http://%s:5051/state.json", mad.App.Tasks[0].Host)}
 	sandboxLogUrls := mssConfig.getMesosSlaveApps(mad)
-	for {
-		for _, url := range sandboxLogUrls {
-			sboxOffset := getSandboxOffset(url)
-			if sboxOffset == 0 {
-				initialOffset = 0
-			} else {
-				initialOffset = sboxOffset
-			}
-			sandboxLogUrl := fmt.Sprintf("%s&offset=%d", url, initialOffset)
-			sboxLog, err := getUrl(sandboxLogUrl)
-			if err != nil {
-				log.Printf("Not able to fetch log URL : (%s) : %s", url, err)
-				os.Exit(1)
-			}
-			logData, err := ioutil.ReadAll(sboxLog.Body)
-			if err != nil {
-				log.Println("Not able to read log response : ", err)
-			}
-			sboxLog.Body.Close()
-			if err := json.Unmarshal(logData, &containerLogs); err != nil {
-				log.Println("Not able to unmarshal logs : ", err)
-			}
-			fmt.Println(containerLogs)
-
+	for _, url := range sandboxLogUrls {
+		sboxOffset := getSandboxOffset(url)
+		if sboxOffset == 0 {
+			initialOffset = 0
+		} else {
+			initialOffset = sboxOffset
 		}
+		sandboxLogUrl := fmt.Sprintf("%s&offset=%d", url, initialOffset)
+		sboxLog, err := getUrl(sandboxLogUrl)
+		if err != nil {
+			log.Printf("Not able to fetch log URL : (%s) : %s", url, err)
+			os.Exit(1)
+		}
+		logData, err := ioutil.ReadAll(sboxLog.Body)
+		if err != nil {
+			log.Println("Not able to read log response : ", err)
+		}
+		sboxLog.Body.Close()
+		if err := json.Unmarshal(logData, &containerLogs); err != nil {
+			log.Println("Not able to unmarshal logs : ", err)
+		}
+		fmt.Println(containerLogs)
+
 	}
 }
