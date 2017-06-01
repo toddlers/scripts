@@ -77,7 +77,7 @@ func getSandboxOffset(url string) int {
 
 }
 
-func (ms *mesosConfig) getMesosSlaveApps(mad marathonAppData) []string {
+func (ms mesosConfig) getMesosSlaveApps(mad marathonAppData) []string {
 	var mesosad mesosAppData
 	var logUrls []string
 	mesosSlaveResp, err := getUrl(ms.mesosEndpoint)
@@ -109,7 +109,7 @@ func (ms *mesosConfig) getMesosSlaveApps(mad marathonAppData) []string {
 	return logUrls
 }
 
-func (mt *mtConfig) getMarathonApps() marathonAppData {
+func (mt mtConfig) getMarathonApps() marathonAppData {
 	var mad marathonAppData
 
 	marathonResp, err := getUrl(mt.marathonEndpoint)
