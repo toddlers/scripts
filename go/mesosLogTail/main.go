@@ -150,7 +150,7 @@ func main() {
 	sandboxLogUrls := mssConfig.getMesosSlaveApps(mad)
 	for _, url := range sandboxLogUrls {
 		sboxOffset := getSandboxOffset(url)
-		if sboxOffset == 0 {
+		if sboxOffset < 0 {
 			initialOffset = 0
 		} else {
 			initialOffset = sboxOffset
