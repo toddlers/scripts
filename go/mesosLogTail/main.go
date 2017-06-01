@@ -20,8 +20,8 @@ type mesosConfig struct {
 }
 
 type sandboxOffset struct {
-	data   string `json:"data"`
-	offset int    `json:"offset"`
+	Data   string `json:"data"`
+	Offset int    `json:"offset"`
 }
 
 type marathonAppData struct {
@@ -53,6 +53,10 @@ type mesosAppData struct {
 	} `json:"frameworks"`
 }
 
+func delayRefresh(n time.Duration) {
+	time.Sleep(n * time.Second)
+}
+
 func getUrl(url string) (*http.Response, error) {
 	httpClient := NewTimeoutClient(1000*time.Millisecond, 2*time.Second)
 	return httpClient.Get(url)
@@ -73,7 +77,7 @@ func getSandboxOffset(url string) int {
 	if err := json.Unmarshal(response, &sbox); err != nil {
 		log.Println("Error while parsing response: ", err)
 	}
-	return sbox.offset
+	return sbox.Offset
 
 }
 
@@ -114,22 +118,24 @@ func (mt mtConfig) getMarathonApps() marathonAppData {
 
 	marathonResp, err := getUrl(mt.marathonEndpoint)
 	if err != nil || marathonResp.StatusCode != 200 {
-		log.Printf("Not able to fetch marathon app data : ", err)
+		log.Printf("Not able to fetch marathon app data : %s", err)
 	}
 	response, err := ioutil.ReadAll(marathonResp.Body)
 	marathonResp.Body.Close()
 	if err != nil {
-		fmt.Println("Not able to read marathon response data")
+		log.Printf("Not able to read marathon response datai : %s", err)
 	}
 	if err := json.Unmarshal(response, &mad); err != nil {
-		log.Println("Error :", err)
+		log.Println("Not able to serialize response data : %s", err)
 	}
 	return mad
 }
 
 func main() {
 	appName := flag.String("appName", "", "App Name")
-	marathonUrl := flag.String("marathonUrl", "http://marathon1-123456.us-east-1.elb.amazonaws.com/v2/apps/", "Marathon Endpoint")
+	marathonUrl := flag.String("marathonUrl", "http://marathon1-123345.us-east-1.elb.amazonaws.com/", "Marathon Endpoint")
+	refreshInt := flag.Duration("refreshInt", 5*time.Second, "Refresh Interval for logs")
+	logFileName := flag.String("logFileName", "stdout", "Log file name (stdout,stderr)")
 
 	flag.Parse()
 
@@ -140,36 +146,41 @@ func main() {
 		return
 	}
 
-	var initialOffset int
-	var containerLogs interface{}
+	var sandboxLogUrl string
+	var sboxoff sandboxOffset
+	var url string
 
-	marathonConfig := mtConfig{marathonEndpoint: fmt.Sprintf("%s%s", *marathonUrl, *appName)}
+	marathonConfig := mtConfig{marathonEndpoint: fmt.Sprintf("%sv2/apps/%s", *marathonUrl, *appName)}
 	mad := marathonConfig.getMarathonApps()
 
 	mssConfig := mesosConfig{mesosEndpoint: fmt.Sprintf("http://%s:5051/state.json", mad.App.Tasks[0].Host)}
 	sandboxLogUrls := mssConfig.getMesosSlaveApps(mad)
-	for _, url := range sandboxLogUrls {
-		sboxOffset := getSandboxOffset(url)
-		if sboxOffset < 0 {
-			initialOffset = 0
-		} else {
-			initialOffset = sboxOffset
-		}
-		sandboxLogUrl := fmt.Sprintf("%s&offset=%d", url, initialOffset)
+	if *logFileName == "stdout" {
+		url = sandboxLogUrls[0]
+	} else {
+		url = sandboxLogUrls[1]
+	}
+	sboxOffset := getSandboxOffset(url)
+
+	for {
+		sandboxLogUrl = fmt.Sprintf("%s&offset=%d", url, sboxOffset)
 		sboxLog, err := getUrl(sandboxLogUrl)
 		if err != nil {
 			log.Printf("Not able to fetch log URL : (%s) : %s", url, err)
 			os.Exit(1)
 		}
-		logData, err := ioutil.ReadAll(sboxLog.Body)
+		logJSONBytes, err := ioutil.ReadAll(sboxLog.Body)
 		if err != nil {
 			log.Println("Not able to read log response : ", err)
 		}
 		sboxLog.Body.Close()
-		if err := json.Unmarshal(logData, &containerLogs); err != nil {
+		if err := json.Unmarshal(logJSONBytes, &sboxoff); err != nil {
 			log.Println("Not able to unmarshal logs : ", err)
 		}
-		fmt.Println(containerLogs)
-
+		if len(sboxoff.Data) > 0 {
+			sboxOffset += len(sboxoff.Data)
+			fmt.Printf("%s\n", sboxoff.Data)
+		}
+		delayRefresh(*refreshInt)
 	}
 }
