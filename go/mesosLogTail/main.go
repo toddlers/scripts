@@ -54,7 +54,7 @@ type mesosAppData struct {
 }
 
 func delayRefresh(n time.Duration) {
-	time.Sleep(n * time.Second)
+	time.Sleep(n)
 }
 
 func getUrl(url string) (*http.Response, error) {
@@ -177,9 +177,10 @@ func main() {
 		if err := json.Unmarshal(logJSONBytes, &sboxoff); err != nil {
 			log.Println("Not able to unmarshal logs : ", err)
 		}
+		fmt.Printf("%s\n", sboxoff.Data)
+
 		if len(sboxoff.Data) > 0 {
 			sboxOffset += len(sboxoff.Data)
-			fmt.Printf("%s\n", sboxoff.Data)
 		}
 		delayRefresh(*refreshInt)
 	}
