@@ -133,7 +133,7 @@ func (mt mtConfig) getMarathonApps() marathonAppData {
 
 func main() {
 	appName := flag.String("appName", "", "App Name")
-	marathonUrl := flag.String("marathonUrl", "http://marathon1-123345.us-east-1.elb.amazonaws.com/", "Marathon Endpoint")
+	marathonUrl := flag.String("marathonUrl", "http://marathon1-123455.us-east-1.elb.amazonaws.com/", "Marathon Endpoint")
 	refreshInt := flag.Duration("refreshInt", 5*time.Second, "Refresh Interval for logs")
 	logFileName := flag.String("logFileName", "stdout", "Log file name (stdout,stderr)")
 
@@ -146,9 +146,12 @@ func main() {
 		return
 	}
 
-	var sandboxLogUrl string
-	var sboxoff sandboxOffset
-	var url string
+	var (
+		sandboxLogUrl string
+		sboxoff       sandboxOffset
+		url           string
+		initialOffset string
+	)
 
 	marathonConfig := mtConfig{marathonEndpoint: fmt.Sprintf("%sv2/apps/%s", *marathonUrl, *appName)}
 	mad := marathonConfig.getMarathonApps()
@@ -161,6 +164,11 @@ func main() {
 		url = sandboxLogUrls[1]
 	}
 	sboxOffset := getSandboxOffset(url)
+	if sboxOffset <= 0 {
+		initialOffset = sboxOffset
+	} else {
+		initialOffset = sboxOffset - (16384 * 2)
+	}
 
 	for {
 		sandboxLogUrl = fmt.Sprintf("%s&offset=%d", url, sboxOffset)
