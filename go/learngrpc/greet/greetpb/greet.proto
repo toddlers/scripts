@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package greet;
+option go_package="greet/greetpb";
+
+message Greeting {
+    string FirstName = 1;
+    string LastName = 2;
+}
+
+message GreetRequest {
+    Greeting greeting = 1;
+}
+
+message GreetResponse {
+    string result = 1;
+}
+
+message GreetManyTimesRequest {
+    Greeting greeting = 1;
+}
+
+message GreetManyTimesResponse {
+    string result = 1;
+}
+
+message LongGreetRequest {
+    Greeting greeting = 1;
+}
+
+message LongGreetResponse {
+    string result = 1;
+}
+
+message GreetEveryoneRequest {
+    Greeting greeting = 1;
+}
+
+message GreetEveryoneResponse {
+    string result = 1;
+}
+
+message GreetWithDealineRequest {
+    Greeting greeting = 1;
+}
+
+message GreetWithDealineResponse {
+    string result = 1;
+}
+service GreetService{
+ // Unary
+ rpc Greet(GreetRequest) returns (GreetResponse);
+
+ // Unary with deadline
+  rpc GreetWithDealine(GreetWithDealineRequest) returns (GreetWithDealineResponse);
+
+
+ // Server Streaming 
+ rpc GreetManyTimes(GreetManyTimesRequest) returns(stream GreetManyTimesResponse) {};
+
+// Client Streaming 
+ rpc LongGreet(stream LongGreetRequest) returns(LongGreetResponse) {};
+
+// BiDirectional : Client and Server Streaming 
+ rpc GreetEveryone(stream GreetEveryoneRequest) returns (stream GreetEveryoneResponse) {};
+}
